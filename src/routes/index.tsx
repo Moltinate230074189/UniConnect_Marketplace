@@ -1,24 +1,42 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { Logo, MobileFrame } from "@/components/Brand";
+import { supabase } from "@/integrations/supabase/client";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "UniConnect — Campus Marketplace" },
+      { name: "description", content: "Buy, sell and connect with students, faculty and vendors on your campus." },
+      { property: "og:title", content: "UniConnect — Campus Marketplace" },
+      { property: "og:description", content: "Buy, sell and connect with students, faculty and vendors on your campus." },
+    ],
+  }),
+  component: Splash,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Splash() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      const { data } = await supabase.auth.getSession();
+      navigate({ to: data.session ? "/home" : "/login", replace: true });
+    }, 2200);
+    return () => clearTimeout(t);
+  }, [navigate]);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <MobileFrame className="flex flex-col items-center justify-center bg-background">
+      <div className="flex min-h-[80vh] flex-col items-center justify-center gap-4 px-8 text-center animate-in fade-in zoom-in-95 duration-700">
+        <Logo className="h-36 w-36" />
+        <h1 className="text-4xl font-extrabold tracking-tight text-navy">
+          Uni<span className="text-brand">Connect</span>
+        </h1>
+        <p className="text-base font-medium text-muted-foreground">Buy. Sell. Connect. Together.</p>
+        <Link to="/login" className="mt-8 text-sm font-semibold text-brand-dark underline-offset-4 hover:underline">
+          Get started →
+        </Link>
+      </div>
+    </MobileFrame>
   );
 }
