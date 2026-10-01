@@ -34,7 +34,7 @@ function ProductPage() {
   if (isLoading) return <AppShell header="tabs"><Skeleton className="m-4 aspect-square rounded-2xl" /></AppShell>;
   if (!p) return <AppShell header="tabs"><p className="p-8 text-center text-muted-foreground">Product not found.</p></AppShell>;
 
-  const item = { id: p.id, title: p.title, price: Number(p.price), image: p.images[0] };
+  const item = { id: p.id, title: p.title, price: Number(p.price), image: p.images[0] ?? "" };
   const selectedColor = color ?? p.colors?.[0];
 
   return (
