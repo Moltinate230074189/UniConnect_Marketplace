@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { socialSignIn } from "@/lib/auth-actions";
 
@@ -29,13 +30,37 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  const [factorId, setFactorId] = useState<string | null>(null);
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+  const [code, setCode] = useState("");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
     if (error) return toast.error(error.message);
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const factor = factors?.totp.find((item) => item.status === "verified");
+      if (!factor) { setLoading(false); return toast.error("Your two-factor method could not be found."); }
+      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: factor.id });
+      setLoading(false);
+      if (challengeError) return toast.error(challengeError.message);
+      setFactorId(factor.id);
+      setChallengeId(challenge.id);
+      return;
+    }
+    setLoading(false);
+    navigate({ to: "/home" });
+  }
+
+  async function verifyCode() {
+    if (!factorId || !challengeId || code.length !== 6) return;
+    setLoading(true);
+    const { error } = await supabase.auth.mfa.verify({ factorId, challengeId, code });
+    setLoading(false);
+    if (error) return toast.error("That authentication code is not valid.");
     navigate({ to: "/home" });
   }
 
@@ -60,7 +85,15 @@ function Login() {
           <p className="text-sm text-muted-foreground">Login to continue</p>
         </div>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-4">
+        {factorId ? (
+          <div className="mt-8 space-y-5 text-center">
+            <div><h2 className="font-bold">Two-factor verification</h2><p className="mt-1 text-sm text-muted-foreground">Enter the 6-digit code from your authenticator app.</p></div>
+            <InputOTP maxLength={6} value={code} onChange={setCode} containerClassName="justify-center">
+              <InputOTPGroup>{Array.from({ length: 6 }, (_, index) => <InputOTPSlot key={index} index={index} className="h-11 w-11" />)}</InputOTPGroup>
+            </InputOTP>
+            <Button type="button" disabled={loading || code.length !== 6} onClick={verifyCode} className="h-12 w-full rounded-xl">{loading ? "Verifying…" : "Verify and continue"}</Button>
+          </div>
+        ) : <form onSubmit={onSubmit} className="mt-8 space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email">Email address</Label>
             <Input id="email" type="email" required placeholder="you@uni.ac.za" className="h-12 rounded-xl bg-muted" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -80,9 +113,9 @@ function Login() {
           <Button type="submit" disabled={loading} className="h-12 w-full rounded-xl text-base">
             {loading ? "Logging in…" : "Log in"}
           </Button>
-        </form>
+        </form>}
 
-        <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+        {!factorId && <><div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
           <div className="h-px flex-1 bg-border" /> Or with <div className="h-px flex-1 bg-border" />
         </div>
         <div className="flex justify-center gap-4">
@@ -96,6 +129,7 @@ function Login() {
           Don't have an account?{" "}
           <Link to="/signup" className="font-semibold text-brand-dark hover:underline">Sign up</Link>
         </p>
+        </>}
       </div>
 
       <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>

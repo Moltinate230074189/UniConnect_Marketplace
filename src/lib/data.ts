@@ -66,7 +66,7 @@ export const meQuery = queryOptions({
       supabase.from("user_roles").select("role").eq("user_id", u.user.id),
     ]);
     const r = roles?.map((x) => x.role) ?? [];
-    const role = r.includes("admin") ? "Administrator" : r.includes("vendor") ? "Vendor" : "Student";
+    const role = r.includes("admin") ? "Administrator" : r.includes("vendor") ? "Vendor" : r.includes("faculty") ? "Faculty" : "Student";
     return { user: u.user, profile, role };
   },
 });

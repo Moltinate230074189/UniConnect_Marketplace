@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { CAMPUSES } from "@/lib/data";
@@ -120,10 +122,15 @@ function SettingsTab() {
 }
 
 function Security() {
-  const { data: me } = useMe();
-  const qc = useQueryClient();
   const [current, setCurrent] = useState("");
   const [pw, setPw] = useState("");
+  const [factor, setFactor] = useState<{ id: string; qr: string } | null>(null);
+  const [verifiedFactorId, setVerifiedFactorId] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    supabase.auth.mfa.listFactors().then(({ data }) => setVerifiedFactorId(data?.totp.find((item) => item.status === "verified")?.id ?? null));
+  }, []);
   async function change() {
     if (pw.length < 8) return toast.error("New password must be at least 8 characters.");
     const { error } = await supabase.auth.updateUser({ password: pw, current_password: current } as { password: string });
@@ -131,23 +138,52 @@ function Security() {
     toast.success("Password updated");
     setCurrent(""); setPw("");
   }
-  async function toggle2fa(v: boolean) {
-    if (!me) return;
-    const { error } = await supabase.from("profiles").update({ two_factor_enabled: v }).eq("id", me.user.id);
+  async function toggle2fa(enabled: boolean) {
+    setBusy(true);
+    if (!enabled && verifiedFactorId) {
+      const { error } = await supabase.auth.mfa.unenroll({ factorId: verifiedFactorId });
+      setBusy(false);
+      if (error) return toast.error(error.message);
+      setVerifiedFactorId(null);
+      return toast.success("Two-factor authentication disabled");
+    }
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "UniConnect authenticator" });
+    setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success(v ? "Two-factor authentication enabled" : "Two-factor authentication disabled");
-    qc.invalidateQueries({ queryKey: ["me"] });
+    setFactor({ id: data.id, qr: data.totp.qr_code });
+  }
+  async function verifyEnrollment() {
+    if (!factor || code.length !== 6) return;
+    setBusy(true);
+    const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: factor.id });
+    if (challengeError) { setBusy(false); return toast.error(challengeError.message); }
+    const { error } = await supabase.auth.mfa.verify({ factorId: factor.id, challengeId: challenge.id, code });
+    setBusy(false);
+    if (error) return toast.error("That authentication code is not valid.");
+    setVerifiedFactorId(factor.id); setFactor(null); setCode("");
+    toast.success("Two-factor authentication enabled");
   }
   return (
     <div className="space-y-4">
       <label className="flex items-center justify-between rounded-xl border bg-card p-4">
         <div><p className="text-sm font-semibold">Two-Factor Authentication</p><p className="text-xs text-muted-foreground">Extra protection at sign-in</p></div>
-        <Switch checked={!!me?.profile?.two_factor_enabled} onCheckedChange={toggle2fa} />
+         <Switch checked={!!verifiedFactorId} disabled={busy} onCheckedChange={toggle2fa} />
       </label>
       <h2 className="pt-2 font-bold">Change password</h2>
       <div className="space-y-1.5"><Label>Current password</Label><Input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} className="h-11 rounded-xl bg-muted" /></div>
       <div className="space-y-1.5"><Label>New password</Label><Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} className="h-11 rounded-xl bg-muted" /></div>
       <Button className="h-11 w-full rounded-xl" onClick={change}>Update password</Button>
+      <Dialog open={!!factor} onOpenChange={(open) => { if (!open) setFactor(null); }}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader><DialogTitle>Set up an authenticator</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Scan this QR code with your authenticator app, then enter its 6-digit code.</p>
+          {factor && <div className="mx-auto rounded-xl bg-card p-3" dangerouslySetInnerHTML={{ __html: factor.qr }} />}
+          <InputOTP maxLength={6} value={code} onChange={setCode} containerClassName="justify-center">
+            <InputOTPGroup>{Array.from({ length: 6 }, (_, index) => <InputOTPSlot key={index} index={index} className="h-11 w-11" />)}</InputOTPGroup>
+          </InputOTP>
+          <Button disabled={busy || code.length !== 6} onClick={verifyEnrollment}>{busy ? "Verifying…" : "Verify and enable"}</Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

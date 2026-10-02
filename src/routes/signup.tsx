@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { socialSignIn } from "@/lib/auth-actions";
 import { CAMPUSES, isUniEmail } from "@/lib/data";
@@ -27,6 +28,7 @@ function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [campus, setCampus] = useState("");
+  const [role, setRole] = useState<"student" | "faculty" | "vendor">("student");
   const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -41,7 +43,7 @@ function Signup() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin, data: { campus_name: campus } },
+      options: { emailRedirectTo: window.location.origin, data: { campus_name: campus, role } },
     });
     setLoading(false);
     if (error) return toast.error(error.message);
@@ -90,6 +92,18 @@ function Signup() {
                   <SelectTrigger className="h-12 rounded-xl bg-muted"><SelectValue placeholder="Select your campus" /></SelectTrigger>
                   <SelectContent>{CAMPUSES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>I am registering as</Label>
+                <RadioGroup value={role} onValueChange={(value) => setRole(value as typeof role)} className="grid grid-cols-3 gap-2">
+                  {([['student', 'Student'], ['faculty', 'Faculty'], ['vendor', 'Vendor']] as const).map(([value, label]) => (
+                    <label key={value} className="flex min-h-16 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border bg-card px-2 text-center text-xs font-semibold has-[[data-state=checked]]:border-brand has-[[data-state=checked]]:bg-brand-soft has-[[data-state=checked]]:text-brand-dark">
+                      <RadioGroupItem value={value} />
+                      {label}
+                    </label>
+                  ))}
+                </RadioGroup>
+                <p className="text-xs text-muted-foreground">Your role controls the tools available to your account.</p>
               </div>
               <label className="flex items-start gap-2 text-sm text-muted-foreground">
                 <Checkbox checked={agree} onCheckedChange={(v) => setAgree(!!v)} className="mt-0.5" />
