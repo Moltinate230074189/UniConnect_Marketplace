@@ -20,6 +20,8 @@ import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedBulletinRouteImport } from './routes/_authenticated/bulletin'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/inbox'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedShopRouteImport } from './routes/_authenticated/shop'
 import { Route as AuthenticatedProductIdRouteImport } from './routes/_authenticated/product.$id'
 
@@ -77,6 +79,17 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedInboxRoute = AuthenticatedInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedShopRoute = AuthenticatedShopRouteImport.update({
   id: '/shop',
   path: '/shop',
@@ -99,6 +112,8 @@ export interface FileRoutesByFullPath {
   '/bulletin': typeof AuthenticatedBulletinRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/inbox': typeof AuthenticatedInboxRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/shop': typeof AuthenticatedShopRoute
   '/product/$id': typeof AuthenticatedProductIdRoute
 }
@@ -113,6 +128,8 @@ export interface FileRoutesByTo {
   '/bulletin': typeof AuthenticatedBulletinRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/inbox': typeof AuthenticatedInboxRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/shop': typeof AuthenticatedShopRoute
   '/product/$id': typeof AuthenticatedProductIdRoute
 }
@@ -129,6 +146,8 @@ export interface FileRoutesById {
   '/_authenticated/bulletin': typeof AuthenticatedBulletinRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/inbox': typeof AuthenticatedInboxRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/shop': typeof AuthenticatedShopRoute
   '/_authenticated/product/$id': typeof AuthenticatedProductIdRoute
 }
@@ -145,6 +164,8 @@ export interface FileRouteTypes {
     | '/bulletin'
     | '/checkout'
     | '/home'
+    | '/inbox'
+    | '/notifications'
     | '/shop'
     | '/product/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -159,6 +180,8 @@ export interface FileRouteTypes {
     | '/bulletin'
     | '/checkout'
     | '/home'
+    | '/inbox'
+    | '/notifications'
     | '/shop'
     | '/product/$id'
   id:
@@ -174,6 +197,8 @@ export interface FileRouteTypes {
     | '/_authenticated/bulletin'
     | '/_authenticated/checkout'
     | '/_authenticated/home'
+    | '/_authenticated/inbox'
+    | '/_authenticated/notifications'
     | '/_authenticated/shop'
     | '/_authenticated/product/$id'
   fileRoutesById: FileRoutesById
@@ -267,6 +292,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/inbox': {
+      id: '/_authenticated/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof AuthenticatedInboxRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/shop': {
       id: '/_authenticated/shop'
       path: '/shop'
@@ -289,6 +328,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBulletinRoute: typeof AuthenticatedBulletinRoute
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedInboxRoute: typeof AuthenticatedInboxRoute
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedShopRoute: typeof AuthenticatedShopRoute
   AuthenticatedProductIdRoute: typeof AuthenticatedProductIdRoute
 }
@@ -298,6 +339,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBulletinRoute: AuthenticatedBulletinRoute,
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedInboxRoute: AuthenticatedInboxRoute,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedShopRoute: AuthenticatedShopRoute,
   AuthenticatedProductIdRoute: AuthenticatedProductIdRoute,
 }

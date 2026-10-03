@@ -250,6 +250,8 @@ export type Database = {
           discount: number
           fulfillment_type: string
           id: string
+          payment_provider: string
+          provider_payment_id: string | null
           shipping_address: Json
           shipping_fee: number
           status: string
@@ -262,6 +264,8 @@ export type Database = {
           discount?: number
           fulfillment_type: string
           id?: string
+          payment_provider?: string
+          provider_payment_id?: string | null
           shipping_address?: Json
           shipping_fee?: number
           status?: string
@@ -274,6 +278,8 @@ export type Database = {
           discount?: number
           fulfillment_type?: string
           id?: string
+          payment_provider?: string
+          provider_payment_id?: string | null
           shipping_address?: Json
           shipping_fee?: number
           status?: string
