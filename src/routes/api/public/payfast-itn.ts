@@ -16,8 +16,8 @@ export const Route = createFileRoute("/api/public/payfast-itn")({
     const raw = await request.text();
     const params = new URLSearchParams(raw);
     const fields = Object.fromEntries(params.entries());
-    const orderId = fields.m_payment_id;
-    const signature = fields.signature;
+    const orderId = fields['m_payment_id'];
+    const signature = fields['signature'];
     const passphrase = process.env['PAYFAST_PASSPHRASE'];
     const sandbox = process.env['PAYFAST_SANDBOX'] !== "false";
     if (!orderId || !signature || !passphrase || payfastSignature(fields, passphrase) !== signature) return new Response("Invalid signature", { status: 400 });
@@ -30,9 +30,9 @@ export const Route = createFileRoute("/api/public/payfast-itn")({
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: order } = await supabaseAdmin.from("orders").select("id, buyer_id, total, status").eq("id", orderId).maybeSingle();
-    if (!order || Math.abs(Number(order.total) - Number(fields.amount_gross)) > 0.01) return new Response("Amount mismatch", { status: 400 });
-    const status = fields.payment_status === "COMPLETE" ? "paid" : fields.payment_status === "FAILED" ? "cancelled" : "pending";
-    await supabaseAdmin.from("orders").update({ status, provider_payment_id: fields.pf_payment_id || null }).eq("id", order.id);
+    if (!order || Math.abs(Number(order.total) - Number(fields['amount_gross'])) > 0.01) return new Response("Amount mismatch", { status: 400 });
+    const status = fields['payment_status'] === "COMPLETE" ? "paid" : fields['payment_status'] === "FAILED" ? "cancelled" : "pending";
+    await supabaseAdmin.from("orders").update({ status, provider_payment_id: fields['pf_payment_id'] || null }).eq("id", order.id);
     if (status === "paid") await supabaseAdmin.from("notifications").insert({ user_id: order.buyer_id, title: "Payment received", body: `Your order ${order.id.slice(0, 8).toUpperCase()} has been paid.`, href: "/account?tab=billing" });
     return new Response("OK", { status: 200 });
   } } },
