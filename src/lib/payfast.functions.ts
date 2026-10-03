@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createHash } from "crypto";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -18,16 +17,6 @@ function payfastConfig() {
     passphrase: process.env['PAYFAST_PASSPHRASE'],
     sandbox: process.env['PAYFAST_SANDBOX'] !== "false",
   };
-}
-
-function encode(value: string) {
-  return encodeURIComponent(value.trim()).replace(/%20/g, "+").replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
-}
-
-export function payfastSignature(fields: Record<string, string>, passphrase?: string) {
-  const pairs = Object.entries(fields).filter(([key, value]) => key !== "signature" && value !== "").map(([key, value]) => `${key}=${encode(value)}`);
-  if (passphrase) pairs.push(`passphrase=${encode(passphrase)}`);
-  return createHash("md5").update(pairs.join("&")).digest("hex");
 }
 
 export const getPayfastReadiness = createServerFn({ method: "GET" }).handler(async () => {
@@ -76,6 +65,7 @@ export const createPayfastPayment = createServerFn({ method: "POST" })
       amount: total.toFixed(2),
       item_name: `UniConnect order ${order.id.slice(0, 8).toUpperCase()}`,
     };
+    const { payfastSignature } = await import("./payfast.server");
     fields.signature = payfastSignature(fields, config.passphrase);
     return { orderId: order.id, url: config.sandbox ? "https://sandbox.payfast.co.za/eng/process" : "https://www.payfast.co.za/eng/process", fields };
   });

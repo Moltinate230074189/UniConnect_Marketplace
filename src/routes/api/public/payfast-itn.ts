@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { payfastSignature } from "@/lib/payfast.functions";
+import { payfastSignature } from "@/lib/payfast.server";
 
 async function sourceIsPayfast(request: Request, sandbox: boolean) {
   const sourceIp = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
@@ -29,11 +29,11 @@ export const Route = createFileRoute("/api/public/payfast-itn")({
     if ((await validation.text()).trim() !== "VALID") return new Response("Invalid payment", { status: 400 });
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: order } = await supabaseAdmin.from("orders").select("id, total, status").eq("id", orderId).maybeSingle();
+    const { data: order } = await supabaseAdmin.from("orders").select("id, buyer_id, total, status").eq("id", orderId).maybeSingle();
     if (!order || Math.abs(Number(order.total) - Number(fields.amount_gross)) > 0.01) return new Response("Amount mismatch", { status: 400 });
     const status = fields.payment_status === "COMPLETE" ? "paid" : fields.payment_status === "FAILED" ? "cancelled" : "pending";
     await supabaseAdmin.from("orders").update({ status, provider_payment_id: fields.pf_payment_id || null }).eq("id", order.id);
-    if (status === "paid") await supabaseAdmin.from("notifications").insert({ user_id: (await supabaseAdmin.from("orders").select("buyer_id").eq("id", order.id).single()).data?.buyer_id, title: "Payment received", body: `Your order ${order.id.slice(0, 8).toUpperCase()} has been paid.`, href: "/account?tab=billing" });
+    if (status === "paid") await supabaseAdmin.from("notifications").insert({ user_id: order.buyer_id, title: "Payment received", body: `Your order ${order.id.slice(0, 8).toUpperCase()} has been paid.`, href: "/account?tab=billing" });
     return new Response("OK", { status: 200 });
   } } },
 });

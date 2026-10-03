@@ -22,8 +22,11 @@ import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/inbox'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedPaymentCancelledRouteImport } from './routes/_authenticated/payment-cancelled'
+import { Route as AuthenticatedPaymentReturnRouteImport } from './routes/_authenticated/payment-return'
 import { Route as AuthenticatedShopRouteImport } from './routes/_authenticated/shop'
 import { Route as AuthenticatedProductIdRouteImport } from './routes/_authenticated/product.$id'
+import { Route as ApiPublicPayfastItnRouteImport } from './routes/api/public/payfast-itn'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -90,6 +93,18 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPaymentCancelledRoute =
+  AuthenticatedPaymentCancelledRouteImport.update({
+    id: '/payment-cancelled',
+    path: '/payment-cancelled',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPaymentReturnRoute =
+  AuthenticatedPaymentReturnRouteImport.update({
+    id: '/payment-return',
+    path: '/payment-return',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedShopRoute = AuthenticatedShopRouteImport.update({
   id: '/shop',
   path: '/shop',
@@ -99,6 +114,11 @@ const AuthenticatedProductIdRoute = AuthenticatedProductIdRouteImport.update({
   id: '/product/$id',
   path: '/product/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicPayfastItnRoute = ApiPublicPayfastItnRouteImport.update({
+  id: '/api/public/payfast-itn',
+  path: '/api/public/payfast-itn',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -114,8 +134,11 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/inbox': typeof AuthenticatedInboxRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/payment-cancelled': typeof AuthenticatedPaymentCancelledRoute
+  '/payment-return': typeof AuthenticatedPaymentReturnRoute
   '/shop': typeof AuthenticatedShopRoute
   '/product/$id': typeof AuthenticatedProductIdRoute
+  '/api/public/payfast-itn': typeof ApiPublicPayfastItnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -130,8 +153,11 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/inbox': typeof AuthenticatedInboxRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/payment-cancelled': typeof AuthenticatedPaymentCancelledRoute
+  '/payment-return': typeof AuthenticatedPaymentReturnRoute
   '/shop': typeof AuthenticatedShopRoute
   '/product/$id': typeof AuthenticatedProductIdRoute
+  '/api/public/payfast-itn': typeof ApiPublicPayfastItnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -148,8 +174,11 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/inbox': typeof AuthenticatedInboxRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/payment-cancelled': typeof AuthenticatedPaymentCancelledRoute
+  '/_authenticated/payment-return': typeof AuthenticatedPaymentReturnRoute
   '/_authenticated/shop': typeof AuthenticatedShopRoute
   '/_authenticated/product/$id': typeof AuthenticatedProductIdRoute
+  '/api/public/payfast-itn': typeof ApiPublicPayfastItnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -166,8 +195,11 @@ export interface FileRouteTypes {
     | '/home'
     | '/inbox'
     | '/notifications'
+    | '/payment-cancelled'
+    | '/payment-return'
     | '/shop'
     | '/product/$id'
+    | '/api/public/payfast-itn'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -182,8 +214,11 @@ export interface FileRouteTypes {
     | '/home'
     | '/inbox'
     | '/notifications'
+    | '/payment-cancelled'
+    | '/payment-return'
     | '/shop'
     | '/product/$id'
+    | '/api/public/payfast-itn'
   id:
     | '__root__'
     | '/'
@@ -199,8 +234,11 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/inbox'
     | '/_authenticated/notifications'
+    | '/_authenticated/payment-cancelled'
+    | '/_authenticated/payment-return'
     | '/_authenticated/shop'
     | '/_authenticated/product/$id'
+    | '/api/public/payfast-itn'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -211,6 +249,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicPayfastItnRoute: typeof ApiPublicPayfastItnRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -306,6 +345,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/payment-cancelled': {
+      id: '/_authenticated/payment-cancelled'
+      path: '/payment-cancelled'
+      fullPath: '/payment-cancelled'
+      preLoaderRoute: typeof AuthenticatedPaymentCancelledRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payment-return': {
+      id: '/_authenticated/payment-return'
+      path: '/payment-return'
+      fullPath: '/payment-return'
+      preLoaderRoute: typeof AuthenticatedPaymentReturnRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/shop': {
       id: '/_authenticated/shop'
       path: '/shop'
@@ -320,6 +373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/payfast-itn': {
+      id: '/api/public/payfast-itn'
+      path: '/api/public/payfast-itn'
+      fullPath: '/api/public/payfast-itn'
+      preLoaderRoute: typeof ApiPublicPayfastItnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -330,6 +390,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedInboxRoute: typeof AuthenticatedInboxRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedPaymentCancelledRoute: typeof AuthenticatedPaymentCancelledRoute
+  AuthenticatedPaymentReturnRoute: typeof AuthenticatedPaymentReturnRoute
   AuthenticatedShopRoute: typeof AuthenticatedShopRoute
   AuthenticatedProductIdRoute: typeof AuthenticatedProductIdRoute
 }
@@ -341,6 +403,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedInboxRoute: AuthenticatedInboxRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedPaymentCancelledRoute: AuthenticatedPaymentCancelledRoute,
+  AuthenticatedPaymentReturnRoute: AuthenticatedPaymentReturnRoute,
   AuthenticatedShopRoute: AuthenticatedShopRoute,
   AuthenticatedProductIdRoute: AuthenticatedProductIdRoute,
 }
@@ -356,6 +420,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  ApiPublicPayfastItnRoute: ApiPublicPayfastItnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
