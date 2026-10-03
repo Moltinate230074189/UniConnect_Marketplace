@@ -1,0 +1,5 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { XCircle } from "lucide-react";
+import { AppShell } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
+export const Route = createFileRoute("/_authenticated/payment-cancelled")({ head: () => ({ meta: [{ title: "Payment cancelled — UniConnect" }, { name: "description", content: "Your UniConnect payment was cancelled." }, { property: "og:title", content: "Payment cancelled — UniConnect" }, { property: "og:description", content: "Your UniConnect payment was cancelled." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: () => <AppShell header="tabs"><div className="px-6 py-16 text-center"><XCircle className="mx-auto h-16 w-16 text-destructive" /><h1 className="mt-4 text-2xl font-extrabold">Payment cancelled</h1><p className="mt-2 text-sm text-muted-foreground">No payment was confirmed. Your cart is still available.</p><Button asChild className="mt-6"><Link to="/checkout">Return to checkout</Link></Button></div></AppShell> });

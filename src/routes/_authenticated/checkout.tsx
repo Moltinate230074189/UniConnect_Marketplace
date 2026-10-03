@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
 import { cart, useCart, zar } from "@/lib/cart";
 import { cn } from "@/lib/utils";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { createPayfastPayment, getPayfastReadiness } from "@/lib/payfast.functions";
 
 export const Route = createFileRoute("/_authenticated/checkout")({
   head: () => ({
@@ -36,7 +38,9 @@ function Checkout() {
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [paying, setPaying] = useState(false);
-  const [doneId, setDoneId] = useState<string | null>(null);
+  const createPayment = useServerFn(createPayfastPayment);
+  const getReadiness = useServerFn(getPayfastReadiness);
+  const { data: readiness } = useQuery({ queryKey: ["payfast-readiness"], queryFn: () => getReadiness() });
 
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const shipping = mode === "delivery" && items.length ? 110 : 0;
@@ -52,30 +56,19 @@ function Checkout() {
   async function pay() {
     if (!me) return;
     setPaying(true);
-    const { data: order, error } = await supabase
-      .from("orders")
-      .insert({ buyer_id: me.user.id, fulfillment_type: mode, shipping_address: form, subtotal, shipping_fee: shipping, discount, total, status: "paid" })
-      .select("id")
-      .single();
-    if (error || !order) { setPaying(false); return toast.error(error?.message ?? "Payment failed"); }
-    const { error: e2 } = await supabase.from("order_items").insert(items.map((i) => ({ order_id: order.id, product_id: i.id, quantity: i.quantity, price: i.price })));
-    setPaying(false);
-    if (e2) return toast.error(e2.message);
-    cart.clear();
-    setDoneId(order.id);
+    try {
+      const payment = await createPayment({ data: { fulfillmentType: mode, shippingAddress: form, discountCode: code.trim().toUpperCase() as "" | "UNI50" | "CAMPUS100", origin: window.location.origin, items: items.map((item) => ({ productId: item.id, quantity: item.quantity })) } });
+      const paymentForm = document.createElement("form");
+      paymentForm.method = "POST"; paymentForm.action = payment.url;
+      Object.entries(payment.fields).forEach(([name, value]) => { const input = document.createElement("input"); input.type = "hidden"; input.name = name; input.value = value; paymentForm.appendChild(input); });
+      document.body.appendChild(paymentForm);
+      cart.clear();
+      paymentForm.submit();
+    } catch (error) {
+      setPaying(false);
+      toast.error(error instanceof Error ? error.message : "Payment could not be started.");
+    }
   }
-
-  if (doneId)
-    return (
-      <AppShell header="tabs">
-        <div className="flex flex-col items-center px-6 py-16 text-center">
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-brand text-brand-foreground"><Check className="h-10 w-10" /></span>
-          <h1 className="mt-5 text-2xl font-extrabold">Payment successful!</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Order #{doneId.slice(0, 8).toUpperCase()} — {zar(total)} paid (sandbox).</p>
-          <Button asChild className="mt-6 h-12 rounded-xl px-8"><Link to="/home">Continue shopping</Link></Button>
-        </div>
-      </AppShell>
-    );
 
   if (!items.length)
     return (
@@ -166,8 +159,8 @@ function Checkout() {
               <Row l="Discount" v={`-${zar(discount)}`} className="text-brand-dark" />
               <div className="border-t pt-2"><Row l="Total" v={zar(total)} className="text-base font-extrabold" /></div>
             </div>
-            <Button className="h-12 w-full rounded-xl text-base" disabled={paying} onClick={pay}>{paying ? "Processing…" : "Pay Now"}</Button>
-            <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground"><Lock className="h-3.5 w-3.5" /> Secure Checkout - SSL Encrypted · PayFast sandbox</p>
+            <Button className="h-12 w-full rounded-xl text-base" disabled={paying || readiness?.configured !== true} onClick={pay}>{paying ? "Opening PayFast…" : readiness?.configured === false ? "PayFast setup required" : "Pay securely with PayFast"}</Button>
+            <p className="flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground"><Lock className="h-3.5 w-3.5 shrink-0" /> {readiness?.configured === false ? "Payments stay disabled until merchant credentials are added." : `Secure checkout · PayFast ${readiness?.sandbox ? "sandbox" : "live"}`}</p>
           </div>
         )}
       </div>

@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
 import {
   Bell, MessageCircle, Search, Home, Store, ShoppingCart, Megaphone, User, CreditCard,
   Settings, ShieldCheck, LogOut, ChevronRight,
@@ -16,6 +15,25 @@ import { useCart } from "@/lib/cart";
 
 export function useMe() {
   return useQuery(meQuery);
+}
+
+function useCommunicationCounts() {
+  const { data: me } = useMe();
+  return useQuery({
+    queryKey: ["communication-counts", me?.user.id], enabled: !!me,
+    queryFn: async () => {
+      const [{ count: notifications }, { data: memberships }] = await Promise.all([
+        supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
+        supabase.from("conversation_participants").select("conversation_id, last_read_at").eq("user_id", me?.user.id ?? ""),
+      ]);
+      let messages = 0;
+      for (const membership of memberships ?? []) {
+        const { count } = await supabase.from("messages").select("id", { count: "exact", head: true }).eq("conversation_id", membership.conversation_id).neq("sender_id", me?.user.id ?? "").gt("created_at", membership.last_read_at);
+        messages += count ?? 0;
+      }
+      return { notifications: notifications ?? 0, messages };
+    },
+  });
 }
 
 function initials(name?: string | null) {
@@ -109,6 +127,7 @@ export function AppShell({ children, header = "market" }: { children: React.Reac
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const navigate = useNavigate();
+  const { data: counts } = useCommunicationCounts();
   return (
     <MobileFrame className="flex flex-col">
       {header === "market" ? (
@@ -119,13 +138,13 @@ export function AppShell({ children, header = "market" }: { children: React.Reac
               <span className="text-lg font-extrabold">UniConnect</span>
             </Link>
             <div className="ml-auto flex items-center gap-3">
-              <button aria-label="Inbox" className="relative" onClick={() => toast.info("Your inbox is empty — messaging is coming soon.")}>
+               <Link to="/inbox" aria-label="Inbox" className="relative">
                 <MessageCircle className="h-6 w-6" />
-                <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">2</span>
-              </button>
-              <Link to="/bulletin" aria-label="Notifications" className="relative">
+                 {!!counts?.messages && <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">{counts.messages}</span>}
+               </Link>
+               <Link to="/notifications" aria-label="Notifications" className="relative">
                 <Bell className="h-6 w-6" />
-                <span className="absolute -right-0.5 top-0 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-brand" />
+                 {!!counts?.notifications && <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">{counts.notifications}</span>}
               </Link>
               <ProfileAvatar onClick={() => setOpen(true)} />
             </div>
