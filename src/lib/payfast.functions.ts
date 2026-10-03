@@ -66,6 +66,6 @@ export const createPayfastPayment = createServerFn({ method: "POST" })
       item_name: `UniConnect order ${order.id.slice(0, 8).toUpperCase()}`,
     };
     const { payfastSignature } = await import("./payfast.server");
-    fields.signature = payfastSignature(fields, config.passphrase);
+    fields['signature'] = payfastSignature(fields, config.passphrase);
     return { orderId: order.id, url: config.sandbox ? "https://sandbox.payfast.co.za/eng/process" : "https://www.payfast.co.za/eng/process", fields };
   });
