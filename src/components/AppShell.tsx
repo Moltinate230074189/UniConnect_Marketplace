@@ -9,6 +9,9 @@ import { Logo } from "@/components/Brand";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { meQuery } from "@/lib/data";
 import { useCart } from "@/lib/cart";
@@ -40,6 +43,13 @@ function initials(name?: string | null) {
   return (name || "U").split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
 }
 
+const ACCOUNT_LINKS = [
+  { tab: "details", label: "Account Details", icon: User },
+  { tab: "billing", label: "Billing info", icon: CreditCard },
+  { tab: "settings", label: "Settings", icon: Settings },
+  { tab: "security", label: "Password / Security", icon: ShieldCheck },
+] as const;
+
 export function ProfileAvatar({ onClick }: { onClick?: () => void }) {
   const { data } = useMe();
   return (
@@ -62,12 +72,7 @@ export function ProfileDrawer({ open, onOpenChange }: { open: boolean; onOpenCha
     await supabase.auth.signOut();
     navigate({ to: "/login", replace: true });
   }
-  const links = [
-    { tab: "details", label: "Account Details", icon: User },
-    { tab: "billing", label: "Billing info", icon: CreditCard },
-    { tab: "settings", label: "Settings", icon: Settings },
-    { tab: "security", label: "Password / Security", icon: ShieldCheck },
-  ] as const;
+  const links = ACCOUNT_LINKS;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[85%] max-w-sm p-0">
@@ -96,6 +101,49 @@ export function ProfileDrawer({ open, onOpenChange }: { open: boolean; onOpenCha
         </nav>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function AccountMenu() {
+  const { data } = useMe();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  async function signOut() {
+    await qc.cancelQueries();
+    qc.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/login", replace: true });
+  }
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button aria-label="Account menu" className="rounded-full transition-transform hover:scale-105">
+          <Avatar className="h-9 w-9 ring-2 ring-brand-foreground/70">
+            <AvatarImage src={data?.profile?.avatar_url ?? undefined} />
+            <AvatarFallback className="bg-navy text-xs font-bold text-navy-foreground">{initials(data?.profile?.full_name)}</AvatarFallback>
+          </Avatar>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-60 rounded-xl">
+        <DropdownMenuLabel>
+          <p className="text-sm font-bold">{data?.profile?.full_name}</p>
+          <p className="truncate text-xs font-normal text-muted-foreground">{data?.user.email}</p>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {ACCOUNT_LINKS.map((l) => (
+          <DropdownMenuItem asChild key={l.tab}>
+            <Link to="/account" search={{ tab: l.tab }} className="flex items-center gap-2.5">
+              <l.icon className="h-4 w-4 text-brand-dark" />
+              {l.label}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={signOut} className="text-destructive focus:text-destructive">
+          <LogOut className="h-4 w-4" /> Sign Out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -147,12 +195,24 @@ export function AppShell({ children, header = "market" }: { children: React.Reac
                 <Bell className="h-6 w-6" />
                  {!!counts?.notifications && <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">{counts.notifications}</span>}
               </Link>
-              <ProfileAvatar onClick={() => setOpen(true)} />
+              <div className="md:hidden"><ProfileAvatar onClick={() => setOpen(true)} /></div>
+              <div className="hidden md:block"><AccountMenu /></div>
             </div>
           </div>
           <nav className="hidden items-center gap-5 text-sm font-semibold md:order-2 md:flex">
             {([["/home", "Home"], ["/shop", "Shop"], ["/bulletin", "Board"], ["/checkout", "Cart"], ["/about", "About"], ["/contact", "Contact"]] as const).map(([to, l]) => (
-              <Link key={to} to={to} className="opacity-85 hover:opacity-100" activeProps={{ className: "underline underline-offset-4" }}>{l}</Link>
+              <Link
+                key={to}
+                to={to}
+                className="group rounded-full px-3 py-1.5 opacity-85 transition-colors hover:bg-card/15 hover:opacity-100"
+                activeProps={{ className: "bg-card/20 opacity-100" }}
+                activeOptions={{ exact: to === "/home" }}
+              >
+                <span className="relative">
+                  {l}
+                  <span className="absolute -bottom-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-brand-foreground opacity-0 transition-opacity group-data-[status=active]:opacity-100" />
+                </span>
+              </Link>
             ))}
           </nav>
           <form
