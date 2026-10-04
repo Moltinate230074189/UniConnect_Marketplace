@@ -169,7 +169,7 @@ export function AppShell({ children, header = "market" }: { children: React.Reac
         </header>
       ) : (
         <header className="sticky top-0 z-30 flex items-center gap-4 border-b bg-card px-4 py-3 md:px-8">
-          {([["/home", "HOME"], ["/shop", "SHOP"], ["/about", "ABOUT"], ["/contact", "CONTACT"]] as const).map(([to, l]) => (
+          {([["/home", "HOME"], ["/shop", "SHOP"], ["/bulletin", "BOARD"], ["/checkout", "CART"], ["/about", "ABOUT"], ["/contact", "CONTACT"]] as const).map(([to, l]) => (
             <Link key={to} to={to} className="text-xs font-bold tracking-wide text-muted-foreground" activeProps={{ className: "text-brand-dark" }}>{l}</Link>
           ))}
           <div className="ml-auto"><ProfileAvatar onClick={() => setOpen(true)} /></div>
