@@ -5,7 +5,7 @@ import {
   Bell, MessageCircle, Search, Home, Store, ShoppingCart, Megaphone, User, CreditCard,
   Settings, ShieldCheck, LogOut, ChevronRight,
 } from "lucide-react";
-import { Logo, MobileFrame } from "@/components/Brand";
+import { Logo } from "@/components/Brand";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -109,7 +109,7 @@ function BottomNav() {
     { to: "/bulletin", label: "Board", icon: Megaphone },
   ] as const;
   return (
-    <nav className="sticky bottom-0 z-30 grid grid-cols-4 border-t bg-card/95 backdrop-blur">
+    <nav className="sticky bottom-0 z-30 grid grid-cols-4 border-t bg-card/95 backdrop-blur md:hidden">
       {items.map((i) => (
         <Link key={i.to} to={i.to} className="relative flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-muted-foreground" activeProps={{ className: "text-brand-dark" }}>
           <i.icon className="h-5 w-5" />
@@ -129,15 +129,16 @@ export function AppShell({ children, header = "market" }: { children: React.Reac
   const navigate = useNavigate();
   const { data: counts } = useCommunicationCounts();
   return (
-    <MobileFrame className="flex flex-col">
+    <div className="flex min-h-screen flex-col bg-background">
       {header === "market" ? (
-        <header className="sticky top-0 z-30 bg-brand px-4 pb-4 pt-3 text-brand-foreground shadow-md">
-          <div className="flex items-center gap-2">
+        <header className="sticky top-0 z-30 bg-brand px-4 pb-4 pt-3 text-brand-foreground shadow-md md:px-8">
+          <div className="mx-auto max-w-6xl md:flex md:items-center md:gap-6">
+          <div className="flex items-center gap-2 md:contents">
             <Link to="/home" className="flex items-center gap-1.5">
               <span className="rounded-lg bg-card p-0.5"><Logo className="h-8 w-8" /></span>
               <span className="text-lg font-extrabold">UniConnect</span>
             </Link>
-            <div className="ml-auto flex items-center gap-3">
+            <div className="ml-auto flex items-center gap-3 md:order-4 md:ml-0">
                <Link to="/inbox" aria-label="Inbox" className="relative">
                 <MessageCircle className="h-6 w-6" />
                  {!!counts?.messages && <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">{counts.messages}</span>}
@@ -149,8 +150,13 @@ export function AppShell({ children, header = "market" }: { children: React.Reac
               <ProfileAvatar onClick={() => setOpen(true)} />
             </div>
           </div>
+          <nav className="hidden items-center gap-5 text-sm font-semibold md:order-2 md:flex">
+            {([["/home", "Home"], ["/shop", "Shop"], ["/bulletin", "Board"], ["/checkout", "Cart"], ["/about", "About"], ["/contact", "Contact"]] as const).map(([to, l]) => (
+              <Link key={to} to={to} className="opacity-85 hover:opacity-100" activeProps={{ className: "underline underline-offset-4" }}>{l}</Link>
+            ))}
+          </nav>
           <form
-            className="relative mt-3"
+            className="relative mt-3 md:order-3 md:mt-0 md:flex-1"
             onSubmit={(e) => {
               e.preventDefault();
               navigate({ to: "/shop", search: { q: q || undefined } });
@@ -159,18 +165,19 @@ export function AppShell({ children, header = "market" }: { children: React.Reac
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="h-11 w-full rounded-xl bg-card pl-10 pr-4 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-navy-light" />
           </form>
+          </div>
         </header>
       ) : (
-        <header className="sticky top-0 z-30 flex items-center gap-4 border-b bg-card px-4 py-3">
+        <header className="sticky top-0 z-30 flex items-center gap-4 border-b bg-card px-4 py-3 md:px-8">
           {([["/home", "HOME"], ["/shop", "SHOP"], ["/about", "ABOUT"], ["/contact", "CONTACT"]] as const).map(([to, l]) => (
             <Link key={to} to={to} className="text-xs font-bold tracking-wide text-muted-foreground" activeProps={{ className: "text-brand-dark" }}>{l}</Link>
           ))}
           <div className="ml-auto"><ProfileAvatar onClick={() => setOpen(true)} /></div>
         </header>
       )}
-      <main className="flex-1">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 md:px-4 md:py-6">{children}</main>
       <BottomNav />
       <ProfileDrawer open={open} onOpenChange={setOpen} />
-    </MobileFrame>
+    </div>
   );
 }
