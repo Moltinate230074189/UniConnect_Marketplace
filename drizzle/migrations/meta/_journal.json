@@ -36,6 +36,13 @@
       "when": 1791178974426,
       "tag": "0004_tighten_profiles_and_conversations",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791179582098,
+      "tag": "0005_fix_orders_policy_recursion",
+      "breakpoints": true
     }
   ]
 }

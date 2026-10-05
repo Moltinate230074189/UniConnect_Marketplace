@@ -476,6 +476,14 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      is_order_buyer: {
+        Args: { _order_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_order_vendor: {
+        Args: { _order_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "vendor" | "student" | "faculty"
