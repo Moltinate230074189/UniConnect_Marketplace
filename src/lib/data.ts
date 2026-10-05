@@ -63,7 +63,7 @@ export const meQuery = queryOptions({
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return null;
     const [{ data: profile }, { data: roles }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle(),
+      supabase.from("profiles").select("id, full_name, campus_name, avatar_url, two_factor_enabled, created_at").eq("id", u.user.id).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", u.user.id),
     ]);
     const r = roles?.map((x) => x.role) ?? [];
