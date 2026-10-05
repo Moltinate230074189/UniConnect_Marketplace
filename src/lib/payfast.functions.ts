@@ -67,7 +67,10 @@ export const createPayfastPayment = createServerFn({ method: "POST" })
       amount: total.toFixed(2),
       item_name: `UniConnect order ${order.id.slice(0, 8).toUpperCase()}`,
     };
-    const { payfastSignature } = await import("./payfast.server");
-    fields['signature'] = payfastSignature(fields, config.passphrase);
+    // PayFast's shared test merchant rejects signed requests, so only sign with real credentials.
+    if (config.merchantId !== SANDBOX_DEFAULTS.merchantId) {
+      const { payfastSignature } = await import("./payfast.server");
+      fields['signature'] = payfastSignature(fields, config.passphrase);
+    }
     return { orderId: order.id, url: config.sandbox ? "https://sandbox.payfast.co.za/eng/process" : "https://www.payfast.co.za/eng/process", fields };
   });
