@@ -464,6 +464,7 @@ export type Database = {
         Args: { _other_user_id: string }
         Returns: string
       }
+      get_my_email: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
