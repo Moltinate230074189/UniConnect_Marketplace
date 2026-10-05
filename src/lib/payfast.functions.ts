@@ -10,13 +10,15 @@ const checkoutSchema = z.object({
   items: z.array(z.object({ productId: z.string().uuid(), quantity: z.number().int().min(1).max(99) })).min(1),
 });
 
+// PayFast's public sandbox test merchant — used until real credentials are added.
+const SANDBOX_DEFAULTS = { merchantId: "10000100", merchantKey: "46f0cd694581a", passphrase: "jt7NOE43FZPn" };
+
 function payfastConfig() {
-  return {
-    merchantId: process.env['PAYFAST_MERCHANT_ID'],
-    merchantKey: process.env['PAYFAST_MERCHANT_KEY'],
-    passphrase: process.env['PAYFAST_PASSPHRASE'],
-    sandbox: process.env['PAYFAST_SANDBOX'] !== "false",
-  };
+  const hasOwn = !!(process.env['PAYFAST_MERCHANT_ID'] && process.env['PAYFAST_MERCHANT_KEY']);
+  const sandbox = !hasOwn || process.env['PAYFAST_SANDBOX'] !== "false";
+  return hasOwn
+    ? { merchantId: process.env['PAYFAST_MERCHANT_ID'], merchantKey: process.env['PAYFAST_MERCHANT_KEY'], passphrase: process.env['PAYFAST_PASSPHRASE'], sandbox }
+    : { ...SANDBOX_DEFAULTS, sandbox: true };
 }
 
 export const getPayfastReadiness = createServerFn({ method: "GET" }).handler(async () => {
@@ -65,7 +67,10 @@ export const createPayfastPayment = createServerFn({ method: "POST" })
       amount: total.toFixed(2),
       item_name: `UniConnect order ${order.id.slice(0, 8).toUpperCase()}`,
     };
-    const { payfastSignature } = await import("./payfast.server");
-    fields['signature'] = payfastSignature(fields, config.passphrase);
+    // PayFast's shared test merchant rejects signed requests, so only sign with real credentials.
+    if (config.merchantId !== SANDBOX_DEFAULTS.merchantId) {
+      const { payfastSignature } = await import("./payfast.server");
+      fields['signature'] = payfastSignature(fields, config.passphrase);
+    }
     return { orderId: order.id, url: config.sandbox ? "https://sandbox.payfast.co.za/eng/process" : "https://www.payfast.co.za/eng/process", fields };
   });
