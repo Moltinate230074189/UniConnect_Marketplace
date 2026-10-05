@@ -103,7 +103,7 @@ Build a mobile-first, responsive full-stack campus e-commerce web application ca
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://edu-trade-zone.lovable.app
+**Live app**: https://uni-connect-marketplace.vercel.app/
 
 ## Build with Lovable
 
