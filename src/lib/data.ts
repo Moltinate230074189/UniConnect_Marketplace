@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const CAMPUSES = [
   "University of Cape Town",
+  "Cape Peninsula University of Technology",
   "University of the Witwatersrand",
   "University of Pretoria",
   "University of Johannesburg",

@@ -18,8 +18,9 @@ export const Route = createFileRoute("/api/public/payfast-itn")({
     const fields = Object.fromEntries(params.entries());
     const orderId = fields['m_payment_id'];
     const signature = fields['signature'];
-    const passphrase = process.env['PAYFAST_PASSPHRASE'];
-    const sandbox = process.env['PAYFAST_SANDBOX'] !== "false";
+    const hasOwn = !!(process.env['PAYFAST_MERCHANT_ID'] && process.env['PAYFAST_MERCHANT_KEY']);
+    const passphrase = hasOwn ? process.env['PAYFAST_PASSPHRASE'] : "jt7NOE43FZPn";
+    const sandbox = !hasOwn || process.env['PAYFAST_SANDBOX'] !== "false";
     if (!orderId || !signature || !passphrase || payfastSignature(fields, passphrase) !== signature) return new Response("Invalid signature", { status: 400 });
     if (!(await sourceIsPayfast(request, sandbox))) return new Response("Invalid source", { status: 403 });
 

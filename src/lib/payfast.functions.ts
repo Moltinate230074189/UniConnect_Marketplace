@@ -10,13 +10,15 @@ const checkoutSchema = z.object({
   items: z.array(z.object({ productId: z.string().uuid(), quantity: z.number().int().min(1).max(99) })).min(1),
 });
 
+// PayFast's public sandbox test merchant — used until real credentials are added.
+const SANDBOX_DEFAULTS = { merchantId: "10000100", merchantKey: "46f0cd694581a", passphrase: "jt7NOE43FZPn" };
+
 function payfastConfig() {
-  return {
-    merchantId: process.env['PAYFAST_MERCHANT_ID'],
-    merchantKey: process.env['PAYFAST_MERCHANT_KEY'],
-    passphrase: process.env['PAYFAST_PASSPHRASE'],
-    sandbox: process.env['PAYFAST_SANDBOX'] !== "false",
-  };
+  const hasOwn = !!(process.env['PAYFAST_MERCHANT_ID'] && process.env['PAYFAST_MERCHANT_KEY']);
+  const sandbox = !hasOwn || process.env['PAYFAST_SANDBOX'] !== "false";
+  return hasOwn
+    ? { merchantId: process.env['PAYFAST_MERCHANT_ID'], merchantKey: process.env['PAYFAST_MERCHANT_KEY'], passphrase: process.env['PAYFAST_PASSPHRASE'], sandbox }
+    : { ...SANDBOX_DEFAULTS, sandbox: true };
 }
 
 export const getPayfastReadiness = createServerFn({ method: "GET" }).handler(async () => {
