@@ -74,3 +74,26 @@ export const createPayfastPayment = createServerFn({ method: "POST" })
     }
     return { orderId: order.id, url: config.sandbox ? "https://sandbox.payfast.co.za/eng/process" : "https://www.payfast.co.za/eng/process", fields };
   });
+// Sandbox only: PayFast only redirects to return_url after a completed test payment, but its
+// server notification can't always reach preview environments. Confirm the buyer's own order on return.
+export const confirmSandboxReturn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ orderId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    if (!payfastConfig().sandbox) return { status: "unchanged" };
+    const { data: order } = await context.supabase.from("orders").select("id, buyer_id, status").eq("id", data.orderId).eq("buyer_id", context.userId).maybeSingle();
+    if (!order) throw new Error("Order not found");
+    if (order.status !== "pending") return { status: order.status };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("orders").update({ status: "paid" }).eq("id", order.id).eq("status", "pending");
+    const { data: items } = await supabaseAdmin.from("order_items").select("product_id, quantity").eq("order_id", order.id);
+    for (const item of items ?? []) {
+      if (!item.product_id) continue;
+      const { data: p } = await supabaseAdmin.from("products").select("stock, vendor_id, title").eq("id", item.product_id).maybeSingle();
+      if (!p) continue;
+      await supabaseAdmin.from("products").update({ stock: Math.max(0, p.stock - item.quantity) }).eq("id", item.product_id);
+      if (p.vendor_id) await supabaseAdmin.from("notifications").insert({ user_id: p.vendor_id, title: "New sale", body: `${item.quantity} × ${p.title} was just paid for.`, href: "/dashboard" });
+    }
+    await supabaseAdmin.from("notifications").insert({ user_id: order.buyer_id, title: "Payment received", body: `Your order ${order.id.slice(0, 8).toUpperCase()} has been paid.`, href: "/account?tab=billing" });
+    return { status: "paid" };
+  });
