@@ -25,9 +25,14 @@ function HomePage() {
       <section className="m-4 overflow-hidden rounded-2xl bg-navy p-6 text-navy-foreground shadow-lg">
         <p className="text-xs font-semibold uppercase tracking-widest text-brand">Campus marketplace</p>
         <h2 className="mt-2 text-2xl font-extrabold leading-tight">FIND &amp; SELL EVERYTHING ON CAMPUS</h2>
-        <Link to="/shop" className="mt-5 inline-flex h-11 items-center rounded-xl bg-brand px-5 text-sm font-bold text-brand-foreground transition hover:bg-brand-dark">
-          Browse all products
-        </Link>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link to="/shop" className="inline-flex h-11 items-center rounded-xl bg-brand px-5 text-sm font-bold text-brand-foreground transition hover:bg-brand-dark">
+            Browse all products
+          </Link>
+          <Link to="/dashboard" className="inline-flex h-11 items-center rounded-xl border border-navy-foreground/40 px-5 text-sm font-bold text-navy-foreground transition hover:bg-navy-foreground/10">
+            Sell something
+          </Link>
+        </div>
       </section>
 
       <section className="px-4">
