@@ -43,6 +43,13 @@
       "when": 1791179582098,
       "tag": "0005_fix_orders_policy_recursion",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791247572140,
+      "tag": "0006_product_images_policies",
+      "breakpoints": true
     }
   ]
 }

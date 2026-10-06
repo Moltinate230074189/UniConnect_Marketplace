@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   Bell, MessageCircle, Search, Home, Store, ShoppingCart, Megaphone, User, CreditCard,
-  Settings, ShieldCheck, LogOut, ChevronRight,
+  Settings, ShieldCheck, LogOut, ChevronRight, LayoutDashboard,
 } from "lucide-react";
 import { Logo } from "@/components/Brand";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -153,11 +153,12 @@ function BottomNav() {
   const items = [
     { to: "/home", label: "Home", icon: Home },
     { to: "/shop", label: "Shop", icon: Store },
+    { to: "/dashboard", label: "Sell", icon: LayoutDashboard },
     { to: "/checkout", label: "Cart", icon: ShoppingCart, badge: count },
     { to: "/bulletin", label: "Board", icon: Megaphone },
   ] as const;
   return (
-    <nav className="sticky bottom-0 z-30 grid grid-cols-4 border-t bg-card/95 backdrop-blur md:hidden">
+    <nav className="sticky bottom-0 z-30 grid grid-cols-5 border-t bg-card/95 backdrop-blur md:hidden">
       {items.map((i) => (
         <Link key={i.to} to={i.to} className="relative flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium text-muted-foreground" activeProps={{ className: "text-brand-dark" }}>
           <i.icon className="h-5 w-5" />
@@ -200,7 +201,7 @@ export function AppShell({ children, header = "market" }: { children: React.Reac
             </div>
           </div>
           <nav className="hidden items-center gap-5 text-sm font-semibold md:order-2 md:flex">
-            {([["/home", "Home"], ["/shop", "Shop"], ["/bulletin", "Board"], ["/checkout", "Cart"], ["/about", "About"], ["/contact", "Contact"]] as const).map(([to, l]) => (
+            {([["/home", "Home"], ["/shop", "Shop"], ["/dashboard", "Sell"], ["/bulletin", "Board"], ["/checkout", "Cart"], ["/about", "About"], ["/contact", "Contact"]] as const).map(([to, l]) => (
               <Link
                 key={to}
                 to={to}
@@ -229,7 +230,7 @@ export function AppShell({ children, header = "market" }: { children: React.Reac
         </header>
       ) : (
         <header className="sticky top-0 z-30 flex items-center gap-4 border-b bg-card px-4 py-3 md:px-8">
-          {([["/home", "HOME"], ["/shop", "SHOP"], ["/bulletin", "BOARD"], ["/checkout", "CART"], ["/about", "ABOUT"], ["/contact", "CONTACT"]] as const).map(([to, l]) => (
+          {([["/home", "HOME"], ["/shop", "SHOP"], ["/dashboard", "SELL"], ["/bulletin", "BOARD"], ["/checkout", "CART"], ["/about", "ABOUT"], ["/contact", "CONTACT"]] as const).map(([to, l]) => (
             <Link key={to} to={to} className="text-xs font-bold tracking-wide text-muted-foreground" activeProps={{ className: "text-brand-dark" }}>{l}</Link>
           ))}
           <div className="ml-auto"><ProfileAvatar onClick={() => setOpen(true)} /></div>
